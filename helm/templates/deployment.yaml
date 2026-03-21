@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hf_ocr
+  name: hf-ocr
 spec:
   selector:
     matchLabels:
-      app: hf_ocr
+      app: hf-ocr
   template:
     metadata:
       labels:
-        app: hf_ocr
+        app: hf-ocr
     spec:
       containers:
-        - name: hf_ocr
-          image: okinasylv/hf_ocr:{{ .Values.env.APP_VERSION }}
+        - name: hf-ocr
+          image: okinasylv/hf-ocr:{{ .Values.env.APP_VERSION }}
           ports:
             - name: http
               containerPort: 5000

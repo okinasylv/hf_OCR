@@ -13,7 +13,7 @@ permissions:
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKERHUB_KEY: ${{ secrets.DOCKER_KEY }}
-  IMAGE_NAME: hf_ocr
+  IMAGE_NAME: hf-ocr
 
 jobs:
   build-and-deploy:

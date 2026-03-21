@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hf_OCR
+  name: hf_ocr
 spec:
   selector:
     matchLabels:
-      app: hf_OCR
+      app: hf_ocr
   template:
     metadata:
       labels:
-        app: hf_OCR
+        app: hf_ocr
     spec:
       containers:
-        - name: hf_OCR
-          image: okinasylv/hf_OCR:{{ .Values.env.APP_VERSION }}
+        - name: hf_ocr
+          image: okinasylv/hf_ocr:{{ .Values.env.APP_VERSION }}
           ports:
             - name: http
               containerPort: 5000

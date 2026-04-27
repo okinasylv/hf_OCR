@@ -38,11 +38,11 @@ def ocr():
     try:
         image = Image.open(filepath)
 
-data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
+        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
 
-draw = ImageDraw.Draw(image)
+        draw = ImageDraw.Draw(image)
 
-n_boxes = len(data['text'])
+        n_boxes = len(data['text'])
 
 for i in range(n_boxes):
     try:

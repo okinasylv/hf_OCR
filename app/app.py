@@ -2,7 +2,6 @@ from flask import Flask, request, send_from_directory
 import pytesseract
 from PIL import Image
 import os
-import cv2
 
 app = Flask(__name__)
 
@@ -37,30 +36,32 @@ def ocr():
     file.save(filepath)
 
     try:
-        image = cv2.imread(filepath)
+        image = Image.open(filepath)
 
-        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-        n_boxes = len(data['text'])
+data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
 
-        for i in range(n_boxes):
-            try:
-                conf = int(data['conf'][i])
-            except:
-                conf = 0
+draw = ImageDraw.Draw(image)
 
-            if conf > 60:
-                x = data['left'][i]
-                y = data['top'][i]
-                w = data['width'][i]
-                h = data['height'][i]
+n_boxes = len(data['text'])
 
-                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+for i in range(n_boxes):
+    try:
+        conf = float(data['conf'][i])
+    except:
+        conf = 0
+
+    if conf > 60:
+        x = data['left'][i]
+        y = data['top'][i]
+        w = data['width'][i]
+        h = data['height'][i]
+
+        draw.rectangle([x, y, x+w, y+h], outline="green", width=2)
 
         boxed_path = os.path.join(UPLOAD_FOLDER, "boxed_" + file.filename)
-        cv2.imwrite(boxed_path, image)
+        image.save(boxed_path)
 
-        text = pytesseract.image_to_string(Image.open(filepath))
-
+        text = pytesseract.image_to_string(image)
     except Exception as e:
         return f"OCR error: {str(e)}"
 

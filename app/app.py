@@ -1,7 +1,8 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, send_from_directory
 import pytesseract
 from PIL import Image
 import os
+import cv2
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ def home():
     '''
 
 @app.route("/upload", methods=["POST"])
-def upload():
+def ocr():
     if 'file' not in request.files:
         return "No file part"
 
@@ -36,16 +37,46 @@ def upload():
     file.save(filepath)
 
     try:
+        image = cv2.imread(filepath)
+
+        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
+        n_boxes = len(data['text'])
+
+        for i in range(n_boxes):
+            try:
+                conf = int(data['conf'][i])
+            except:
+                conf = 0
+
+            if conf > 60:
+                x = data['left'][i]
+                y = data['top'][i]
+                w = data['width'][i]
+                h = data['height'][i]
+
+                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        boxed_path = os.path.join(UPLOAD_FOLDER, "boxed_" + file.filename)
+        cv2.imwrite(boxed_path, image)
+
         text = pytesseract.image_to_string(Image.open(filepath))
+
     except Exception as e:
         return f"OCR error: {str(e)}"
 
     return f"""
-    <h3>Felismert szöveg:</h3>
+    <h3>Szöveg:</h3>
     <pre>{text}</pre>
-    <br>
-    <a href="/">Vissza</a>
+
+    <h3>Kép:</h3>
+    <img src="/image/{os.path.basename(boxed_path)}" width="500">
+
+    <br><a href="/">Vissza</a>
     """
+
+@app.route('/image/<filename>')
+def get_image(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

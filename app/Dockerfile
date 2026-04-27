@@ -1,6 +1,6 @@
-FROM python:3.6.15-slim-buster
+FROM python:3.10-slim-buster
 RUN pip3 install flask requests
-RUN apt-get update && apt-get install -y tesseract-ocr && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y tesseract-ocr
 RUN pip3 install flask pytesseract pillow
 RUN useradd pythonuser -ms /bin/bash
 RUN mkdir -p /home/pythonuser/app/uploads && chmod 777 /home/pythonuser/app/uploads

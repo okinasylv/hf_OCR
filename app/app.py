@@ -1,6 +1,6 @@
 from flask import Flask, request, send_from_directory
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageDraw
 import os
 
 app = Flask(__name__)
@@ -8,9 +8,11 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
 @app.route("/health")
 def health():
     return "OK"
+
 
 @app.route("/")
 def home():
@@ -21,6 +23,7 @@ def home():
         <input type="submit" value="Feltöltés">
     </form>
     '''
+
 
 @app.route("/upload", methods=["POST"])
 def ocr():
@@ -37,31 +40,38 @@ def ocr():
 
     try:
         image = Image.open(filepath)
-
-        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-
         draw = ImageDraw.Draw(image)
+
+        data = pytesseract.image_to_data(
+            image,
+            output_type=pytesseract.Output.DICT
+        )
 
         n_boxes = len(data['text'])
 
-for i in range(n_boxes):
-    try:
-        conf = float(data['conf'][i])
-    except:
-        conf = 0
+        for i in range(n_boxes):
+            try:
+                conf = float(data['conf'][i])
+            except:
+                conf = 0
 
-    if conf > 60:
-        x = data['left'][i]
-        y = data['top'][i]
-        w = data['width'][i]
-        h = data['height'][i]
+            if conf > 60:
+                x = data['left'][i]
+                y = data['top'][i]
+                w = data['width'][i]
+                h = data['height'][i]
 
-        draw.rectangle([x, y, x+w, y+h], outline="green", width=2)
+                draw.rectangle(
+                    [x, y, x + w, y + h],
+                    outline="green",
+                    width=2
+                )
 
         boxed_path = os.path.join(UPLOAD_FOLDER, "boxed_" + file.filename)
         image.save(boxed_path)
 
         text = pytesseract.image_to_string(image)
+
     except Exception as e:
         return f"OCR error: {str(e)}"
 
@@ -75,9 +85,11 @@ for i in range(n_boxes):
     <br><a href="/">Vissza</a>
     """
 
+
 @app.route('/image/<filename>')
 def get_image(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

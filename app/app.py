@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "/home/pythonuser/app/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 

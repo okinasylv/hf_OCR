@@ -1,4 +1,4 @@
-FROM python:3.10-slim-buster
+FROM python:3.10-slim
 RUN pip3 install flask requests
 RUN apt-get update && apt-get install -y tesseract-ocr
 RUN pip3 install flask pytesseract pillow

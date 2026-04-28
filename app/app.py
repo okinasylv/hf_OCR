@@ -42,6 +42,13 @@ def ocr():
         image = Image.open(filepath)
         draw = ImageDraw.Draw(image)
 
+        img_np = np.array(gray)
+        threshold = 150
+        bw = (img_np > threshold) * 255
+
+
+        bw_image = Image.fromarray(bw.astype('uint8'))
+
         data = pytesseract.image_to_data(
             image,
             output_type=pytesseract.Output.DICT
@@ -70,7 +77,7 @@ def ocr():
         boxed_path = os.path.join(UPLOAD_FOLDER, "boxed_" + file.filename)
         image.save(boxed_path)
 
-        text = pytesseract.image_to_string(image)
+        text = pytesseract.image_to_string(bw_image)
 
     except Exception as e:
         return f"OCR error: {str(e)}"

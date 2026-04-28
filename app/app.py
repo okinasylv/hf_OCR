@@ -8,6 +8,10 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+@app.route("/health")
+def health():
+   return "OK" 
+
 @app.route("/")
 def home():
     return '''

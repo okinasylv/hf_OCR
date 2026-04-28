@@ -5,98 +5,70 @@ import os
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "/home/pythonuser/app/uploads"
+UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
-@app.route("/health")
-def health():
-    return "OK"
-
 
 @app.route("/")
 def home():
     return '''
-    <h2>OCR Web App</h2>
+    <h2>Pytesseract Keretező</h2>
     <form method="POST" action="/upload" enctype="multipart/form-data">
         <input type="file" name="file" required>
         <input type="submit" value="Feltöltés">
     </form>
     '''
 
-
 @app.route("/upload", methods=["POST"])
 def ocr():
-    if 'file' not in request.files:
-        return "No file part"
-
+    if 'file' not in request.files: return "Nincs fájl"
     file = request.files['file']
-
-    if file.filename == '':
-        return "No selected file"
+    if file.filename == '': return "Nincs kiválasztott fájl"
 
     filepath = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(filepath)
 
     try:
-        image = Image.open(filepath)
+        image = Image.open(filepath).convert("RGB")
         draw = ImageDraw.Draw(image)
 
-        img_np = np.array(gray)
-        threshold = 150
-        bw = (img_np > threshold) * 255
+        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
 
-
-        bw_image = Image.fromarray(bw.astype('uint8'))
-
-        data = pytesseract.image_to_data(
-            image,
-            output_type=pytesseract.Output.DICT
-        )
-
-        n_boxes = len(data['text'])
-
+        n_boxes = len(data['level'])
         for i in range(n_boxes):
-            try:
-                conf = float(data['conf'][i])
-            except:
-                conf = 0
+            text = data['text'][i].strip()
+            conf = int(data['conf'][i])
 
-            if conf > 60:
-                x = data['left'][i]
-                y = data['top'][i]
-                w = data['width'][i]
-                h = data['height'][i]
-
+            if conf > 40 and len(text) > 0:
+                x, y, w, h = data['left'][i], data['top'][i], data['width'][i], data['height'][i]
+                
+       
+                padding = 2
                 draw.rectangle(
-                    [x, y, x + w, y + h],
-                    outline="green",
-                    width=2
+                    [x - padding, y - padding, x + w + padding, y + h + padding],
+                    outline="red", 
+                    width=3
                 )
 
-        boxed_path = os.path.join(UPLOAD_FOLDER, "boxed_" + file.filename)
+        boxed_filename = "boxed_" + file.filename
+        boxed_path = os.path.join(UPLOAD_FOLDER, boxed_filename)
         image.save(boxed_path)
 
-        text = pytesseract.image_to_string(bw_image)
+        full_text = pytesseract.image_to_string(image)
 
     except Exception as e:
-        return f"OCR error: {str(e)}"
+        return f"OCR hiba: {str(e)}"
 
     return f"""
-    <h3>Szöveg:</h3>
-    <pre>{text}</pre>
-
-    <h3>Kép:</h3>
-    <img src="/image/{os.path.basename(boxed_path)}" width="500">
-
+    <h3>Felismert szöveg:</h3>
+    <pre style="background: #eee; padding: 10px;">{full_text}</pre>
+    <h3>Keretezett eredmény:</h3>
+    <img src="/image/{boxed_filename}" width="800">
     <br><a href="/">Vissza</a>
     """
-
 
 @app.route('/image/<filename>')
 def get_image(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
-
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
